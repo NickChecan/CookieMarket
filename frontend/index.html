@@ -1,0 +1,155 @@
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <title>Cadastro Simples</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+        <!--https://github.com/insites/cookieconsent-->
+        <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.0/cookieconsent.min.css" />
+        <script src="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.0/cookieconsent.min.js"></script>
+        <script>
+            window.addEventListener("load", function(){
+                window.cookieconsent.initialise({
+                    "palette": {
+                        "popup": {
+                            "background": "#000"
+                        },
+                        "button": {
+                            "background": "transparent",
+                            "text": "#f1d600",
+                            "border": "#f1d600"
+                        }
+                    },
+                    "type": "opt-in",
+                    "content": {
+                        "link": "http://www.planalto.gov.br/cci",
+                        "href": "http://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/L13709.htm"
+                    },
+                    "onInitialise": function (status) {
+                        var type = this.options.type;
+                        var didConsent = this.hasConsented();
+                        if (type == 'opt-in' && didConsent) {
+                            // enable cookies
+                            alert("Cookies permitidos!")
+                        }
+                        if (type == 'opt-out' && !didConsent) {
+                            // disable cookies
+                            alert("Cookies não permitidos!")
+                        }
+                    },
+                    "onStatusChange": function(status, chosenBefore) {
+                        var type = this.options.type;
+                        var didConsent = this.hasConsented();
+                        if (type == 'opt-in' && didConsent) {
+                            // enable cookies
+                            alert("Cookies permitidos!")
+                        }
+                        if (type == 'opt-out' && !didConsent) {
+                            // disable cookies
+                            //alert($.cookie("cookieconsent_status"))
+                            alert("Cookies não permitidos!")
+                        }
+                    },
+                    "onRevokeChoice": function() {
+                        var type = this.options.type;
+                        if (type == 'opt-in') {
+                            // disable cookies
+                            //alert($.cookie("cookieconsent_status"))
+                            alert("Cookies permitidos!")
+                        }
+                        if (type == 'opt-out') {
+                            // enable cookies
+                            alert("Cookies não permitidos!")
+                        }
+                    }
+                })
+            });
+        </script>
+
+    </head>
+    <body>
+        <div class="container">
+            <h1>Cadastro Simples</h1>
+            <hr>
+            <div>
+                <input name='id' type='hidden' />
+                <div class="form-group">
+                    <label for="Name"></label>
+                    <input class='form-control' name='name' placeholder='Digite o nome' />
+                </div>
+                <button class='btn btn-success' save>Salvar</button>
+            </div>
+
+            <table class="table" id='clients'>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <!--<th>Status do Cookie</th>-->
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="clientsRows"></tbody>
+            </table>
+        </div>
+
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
+
+        <script>
+            const API = 'http://localhost:3000'
+            const createButton = (label, type) => {
+                return $('<button>').addClass(`btn btn-${type}`).html(label)
+            }
+            const renderRows = clients => {
+                const rows = clients.map(client => {
+                    const updateButton = createButton('Atualizar', 'warning')
+                    updateButton.click(() => loadClient(client))
+                    const removeButton = createButton('Excluir', 'danger')
+                    removeButton.click(() => removeClient(client))
+                    return $('<tr>')
+                        .append($('<td>').append(client.name))
+                        //.append($('<td>').append(client.cookie))
+                        .append($('<td>').append(updateButton).append(removeButton))
+                })
+                $('#clientsRows').html(rows)
+            }
+            const loadClient = client => {
+                $('[name=id]').val(client._id)
+                $('[name=name]').val(client.name)
+                //$('[name=cookie]').val(client.name)
+            }
+            const removeClient = client => {
+                $.ajax({
+                    method: 'DELETE',
+                    url: `${API}/clients/${client._id}`,
+                    success: getClients
+                })
+            }
+            const getClients = () => {
+                $.ajax({
+                    url: `${API}/clients`,
+                    success: clients => {
+                        renderRows(clients)
+                        $('[name]').val('')
+                    }
+                })
+            }
+            const saveClient = () => {
+                const _id = $('[name=id]').val()
+                const name = $('[name=name]').val()
+                console.log($.cookie("cookieconsent_status"))
+                $.ajax({
+                    method: _id ? 'PUT' : 'POST',
+                    url: `${API}/clients/${_id}`,
+                    data: _id ? { _id, name } : { name },
+                    success: getClients
+                })
+            }
+            $(() => {
+                getClients()
+                $('[save]').click(saveClient)
+
+            })
+        </script>
+
+    </body>
+</html>
