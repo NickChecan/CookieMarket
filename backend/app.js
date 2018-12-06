@@ -17,8 +17,8 @@ server.use(cors())
 
 // ODM
 const Client = restful.model('Client', {
-    name: { type: String, required: true }
-    //cookie: { type: String, required: false}
+    name: { type: String, required: true },
+    status: { type: String, required: false}
 })
 
 // Rest API
